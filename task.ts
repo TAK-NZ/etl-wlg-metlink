@@ -8,7 +8,7 @@
 
 import { Static, Type, TSchema } from '@sinclair/typebox';
 import { fetch } from '@tak-ps/etl'
-import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType, InputFeatureCollection } from '@tak-ps/etl';
+import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType } from '@tak-ps/etl';
 
 /**
  * Constants used throughout the ETL task
@@ -19,7 +19,7 @@ const UNKNOWN_COURSE = Number.NaN; // Using NaN per CoT specification for unknow
 /**
  * Icon paths for different vehicle types
  */
-const BUS_ICON_PATH = '6d781afb-89a6-4c07-b2b9-a89748b6a38f/Transport/bus.png';
+const BUS_ICON_PATH = 'ad78aafb-83a6-4c07-b2b9-a897a8b6a38f/Shapes/bus.png';
 const TRAIN_ICON_PATH = '34ae1613-9645-4222-a9d2-e5f243dea2865/Transportation/Train4.png';
 
 /**
@@ -28,7 +28,8 @@ const TRAIN_ICON_PATH = '34ae1613-9645-4222-a9d2-e5f243dea2865/Transportation/Tr
  */
 const Env = Type.Object({
     'METLINK_API_KEY': Type.String({ 
-        description: 'API Key for Metlink OpenData API'
+        description: 'API Key for Metlink OpenData API',
+        default: ''
     }),
     'DEBUG': Type.Boolean({ 
         description: 'Print API results in logs.', 
@@ -122,6 +123,8 @@ export default class Task extends ETL {
         }
     }
 
+
+
     /**
      * Main control function that executes the ETL process
      * 1. Fetches vehicle data from Metlink API
@@ -182,7 +185,6 @@ export default class Task extends ETL {
             const position = vehicle.position;
             const trip = vehicle.trip;
             
-            const id = entity.id;
             const coordinates = [position.longitude, position.latitude];
 
             // Determine vehicle type based on route_id
@@ -201,15 +203,17 @@ export default class Task extends ETL {
                 icon = BUS_ICON_PATH;
                 cotType = 'a-f-G-E-V-C'; // Bus CoT type (friendly ground equipment vehicle - civilian)
             }
+            
+            const cotId = `WLG-Metlink${vehicleType}-${vehicle.vehicle.id}`;
 
             // Helper function to build structured remarks for vehicles
             function buildVehicleRemarks(vehicleData: VehicleData): string {
                 const remarksObj: Record<string, string> = {
                     'Vehicle Type': vehicleType,
                     'Vehicle ID': vehicleData.vehicle.vehicle.id,
-                    'Route ID': vehicleData.vehicle.trip.route_id.toString(),
+                    'Route ID': (vehicleData.vehicle.trip.route_id ?? 'Unknown').toString(),
                     'Trip ID': vehicleData.vehicle.trip.trip_id,
-                    'Direction': vehicleData.vehicle.trip.direction_id.toString(),
+                    'Direction': (vehicleData.vehicle.trip.direction_id ?? 'Unknown').toString(),
                     'Start Time': vehicleData.vehicle.trip.start_time
                 };
                 
@@ -240,11 +244,12 @@ export default class Task extends ETL {
             // Prepare the feature properties with enhanced metadata
             const properties = {
                 type: cotType,
-                callsign: `${vehicleType} ${vehicle.vehicle.id}`,
+                callsign: `Route ${trip.route_id} - ${vehicleType} ${vehicle.vehicle.id}`,
                 time: new Date(vehicle.timestamp * 1000),
                 start: new Date(vehicle.timestamp * 1000),
                 speed: position.speed || Number.NaN,
                 course: position.bearing || UNKNOWN_COURSE,
+                'marker-color': vehicleType === 'Train' ? '#784e90' : '#4e801f',
                 metadata: {
                     ...entity,
                     vehicleType,
@@ -259,8 +264,8 @@ export default class Task extends ETL {
                 icon: icon
             };
             
-            ids.set(id, {
-                id: id,
+            ids.set(cotId, {
+                id: cotId,
                 type: 'Feature',
                 properties: properties,
                 geometry: {
@@ -282,13 +287,13 @@ export default class Task extends ETL {
         console.log(`ok - processed ${ids.size} valid vehicles (from ${body.entity.length} total)`);
         
         // Create the final GeoJSON feature collection to submit
-        const fc: Static<typeof InputFeatureCollection> = {
-            type: 'FeatureCollection',
+        const fc = {
+            type: 'FeatureCollection' as const,
             features
         };
 
         console.log(`ok - submitting ${features.length} features to CloudTAK`);
-        await this.submit(fc);
+        await this.submit(fc as unknown as Parameters<typeof this.submit>[0]);
     }
 }
 
