@@ -10,6 +10,8 @@
 
 Real-time positions of buses and trains in the Greater Wellington area.
 
+![Metlink vehicle locations](docs/etl-wlg-metlink.png)
+
 ## Vehicle Types and Icons
 
 ### Buses
