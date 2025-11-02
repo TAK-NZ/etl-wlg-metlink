@@ -6,7 +6,7 @@
  * showing buses and trains in the Greater Wellington area.
  */
 
-import { Static, Type, TSchema } from '@sinclair/typebox';
+import { Type, TSchema } from '@sinclair/typebox';
 import { fetch } from '@tak-ps/etl'
 import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType } from '@tak-ps/etl';
 
