@@ -21,6 +21,7 @@ const UNKNOWN_COURSE = Number.NaN; // Using NaN per CoT specification for unknow
  */
 const BUS_ICON_PATH = 'ad78aafb-83a6-4c07-b2b9-a897a8b6a38f/Shapes/bus.png';
 const TRAIN_ICON_PATH = '34ae1613-9645-4222-a9d2-e5f243dea2865/Transportation/Train4.png';
+const SHIP_ICON_PATH = '34ae1613-9645-4222-a9d2-e5f243dea2865/Transportation/Ship.png';
 
 /**
  * Environment configuration schema for the ETL task
@@ -30,6 +31,18 @@ const Env = Type.Object({
     'METLINK_API_KEY': Type.String({ 
         description: 'API Key for Metlink OpenData API',
         default: ''
+    }),
+    'Show_Buses': Type.Boolean({
+        description: 'Show buses on the map',
+        default: true
+    }),
+    'Show_Trains': Type.Boolean({
+        description: 'Show trains on the map',
+        default: true
+    }),
+    'Show_Ships': Type.Boolean({
+        description: 'Show ships/ferries on the map',
+        default: true
     }),
     'DEBUG': Type.Boolean({ 
         description: 'Print API results in logs.', 
@@ -187,21 +200,43 @@ export default class Task extends ETL {
             
             const coordinates = [position.longitude, position.latitude];
 
-            // Determine vehicle type based on route_id
-            // Route IDs 2, 5, 6 are trains (rail lines)
-            // All other route IDs are buses
+            // Extract correct route ID from trip_id (first element before first '__')
+            const correctRouteId = trip.trip_id.split('__')[0];
+
+            // Determine vehicle type based on trip_id prefix
+            // QDF: Ship/Ferry
+            // HVL, JVL, KPL, MEL, WRL, MUL: Trains (various rail lines)
+            // AX: Bus (Airport Express)
+            // Numbers: Bus
             let vehicleType: string;
             let icon: string;
             let cotType: string;
+            let markerColor: string;
             
-            if ([2, 5, 6].includes(trip.route_id)) {
+            if (trip.trip_id.startsWith('QDF')) {
+                vehicleType = 'Ship';
+                icon = SHIP_ICON_PATH;
+                cotType = 'a-f-S-E-V'; // Ship CoT type (friendly surface equipment vehicle)
+                markerColor = '#0093b2';
+            } else if (trip.trip_id.startsWith('HVL') || trip.trip_id.startsWith('JVL') || 
+                       trip.trip_id.startsWith('KPL') || trip.trip_id.startsWith('MEL') || 
+                       trip.trip_id.startsWith('WRL') || trip.trip_id.startsWith('MUL')) {
                 vehicleType = 'Train';
                 icon = TRAIN_ICON_PATH;
                 cotType = 'a-u-G-E-V'; // Train CoT type as specified
+                markerColor = '#784e90';
             } else {
                 vehicleType = 'Bus';
                 icon = BUS_ICON_PATH;
                 cotType = 'a-f-G-E-V-C'; // Bus CoT type (friendly ground equipment vehicle - civilian)
+                markerColor = '#4e801f';
+            }
+            
+            // Skip vehicles based on show/hide settings
+            if ((vehicleType === 'Bus' && !env.Show_Buses) ||
+                (vehicleType === 'Train' && !env.Show_Trains) ||
+                (vehicleType === 'Ship' && !env.Show_Ships)) {
+                continue;
             }
             
             const cotId = `WLG-Metlink${vehicleType}-${vehicle.vehicle.id}`;
@@ -211,7 +246,7 @@ export default class Task extends ETL {
                 const remarksObj: Record<string, string> = {
                     'Vehicle Type': vehicleType,
                     'Vehicle ID': vehicleData.vehicle.vehicle.id,
-                    'Route ID': (vehicleData.vehicle.trip.route_id ?? 'Unknown').toString(),
+                    'Route ID': correctRouteId,
                     'Trip ID': vehicleData.vehicle.trip.trip_id,
                     'Direction': (vehicleData.vehicle.trip.direction_id ?? 'Unknown').toString(),
                     'Start Time': vehicleData.vehicle.trip.start_time
@@ -244,16 +279,16 @@ export default class Task extends ETL {
             // Prepare the feature properties with enhanced metadata
             const properties = {
                 type: cotType,
-                callsign: `Route ${trip.route_id} - ${vehicleType} ${vehicle.vehicle.id}`,
+                callsign: `Route ${correctRouteId} - ${vehicleType} ${vehicle.vehicle.id}`,
                 time: new Date(vehicle.timestamp * 1000),
                 start: new Date(vehicle.timestamp * 1000),
                 speed: position.speed || Number.NaN,
                 course: position.bearing || UNKNOWN_COURSE,
-                'marker-color': vehicleType === 'Train' ? '#784e90' : '#4e801f',
+                'marker-color': markerColor,
                 metadata: {
                     ...entity,
                     vehicleType,
-                    routeId: trip.route_id,
+                    routeId: correctRouteId,
                     directionId: trip.direction_id,
                     vehicleId: vehicle.vehicle.id,
                     occupancy: vehicle.occupancy_status !== undefined ? 
