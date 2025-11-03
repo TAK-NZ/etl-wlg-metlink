@@ -285,6 +285,7 @@ export default class Task extends ETL {
                 speed: position.speed || Number.NaN,
                 course: position.bearing || UNKNOWN_COURSE,
                 'marker-color': markerColor,
+                stale: 180000, // Set staleness timeout to 180 seconds (180000 milliseconds)
                 metadata: {
                     ...entity,
                     vehicleType,
