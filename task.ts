@@ -208,8 +208,8 @@ export default class Task extends ETL {
             // Extract correct route ID from trip_id (first element before first '__')
             const correctRouteId = trip.trip_id.split('__')[0];
 
-            // Determine vehicle type based on trip_id prefix
-            // QDF: Ship/Ferry
+            // Determine vehicle type based on trip_id prefix or route ID
+            // QDF, MIF: Ship/Ferry
             // HVL, JVL, KPL, MEL, WRL, MUL: Trains (various rail lines)
             // AX: Bus (Airport Express)
             // Numbers: Bus
@@ -218,7 +218,7 @@ export default class Task extends ETL {
             let cotType: string;
             let markerColor: string;
             
-            if (trip.trip_id.startsWith('QDF')) {
+            if (trip.trip_id.startsWith('QDF') || correctRouteId === 'MIF') {
                 vehicleType = 'Ship';
                 icon = SHIP_ICON_PATH;
                 cotType = 'a-f-S-E-V'; // Ship CoT type (friendly surface equipment vehicle)
