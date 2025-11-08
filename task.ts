@@ -200,6 +200,11 @@ export default class Task extends ETL {
             
             const coordinates = [position.longitude, position.latitude];
 
+            // Skip vehicles with invalid location (0,0)
+            if (position.latitude === 0 && position.longitude === 0) {
+                continue;
+            }
+
             // Extract correct route ID from trip_id (first element before first '__')
             const correctRouteId = trip.trip_id.split('__')[0];
 
