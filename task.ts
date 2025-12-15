@@ -206,6 +206,10 @@ export default class Task extends ETL {
             }
 
             // Extract correct route ID from trip_id (first element before first '__')
+            if (!trip.trip_id) {
+                console.warn(`Skipping vehicle ${vehicle.vehicle.id}: missing trip_id`);
+                continue;
+            }
             const correctRouteId = trip.trip_id.split('__')[0];
 
             // Determine vehicle type based on trip_id prefix or route ID
