@@ -226,19 +226,19 @@ export default class Task extends ETL {
                 vehicleType = 'Ship';
                 icon = SHIP_ICON_PATH;
                 cotType = 'a-f-S-E-V'; // Ship CoT type (friendly surface equipment vehicle)
-                markerColor = '#0093b2';
+                markerColor = '#00FFFF';
             } else if (trip.trip_id.startsWith('HVL') || trip.trip_id.startsWith('JVL') || 
                        trip.trip_id.startsWith('KPL') || trip.trip_id.startsWith('MEL') || 
                        trip.trip_id.startsWith('WRL') || trip.trip_id.startsWith('MUL')) {
                 vehicleType = 'Train';
                 icon = TRAIN_ICON_PATH;
                 cotType = 'a-u-G-E-V'; // Train CoT type as specified
-                markerColor = '#784e90';
+                markerColor = '#7F007F';
             } else {
                 vehicleType = 'Bus';
                 icon = BUS_ICON_PATH;
                 cotType = 'a-f-G-E-V-C'; // Bus CoT type (friendly ground equipment vehicle - civilian)
-                markerColor = '#4e801f';
+                markerColor = '#007F00';
             }
             
             // Skip vehicles based on show/hide settings
