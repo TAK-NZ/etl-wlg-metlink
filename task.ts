@@ -178,7 +178,7 @@ export default class Task extends ETL {
                 throw new Error('Invalid API response format: missing entity data');
             }
         } catch (error) {
-            console.error(`Error fetching Metlink data: ${error.message}`);
+            console.error(`Error fetching Metlink data: ${error instanceof Error ? error.message : String(error)}`);
             // Return empty feature collection on error
             await this.submit({
                 type: 'FeatureCollection',
