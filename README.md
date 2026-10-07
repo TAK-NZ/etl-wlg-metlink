@@ -44,6 +44,21 @@ Deployment into the CloudTAK environment for ETL tasks is done via automatic rel
 Github actions will build and push docker releases on every version tag which can then be automatically configured via the
 CloudTAK API.
 
+### Capabilities Manifest
+
+`capabilities.json` describes what this ETL needs from CloudTAK. It is validated by `npm test` and embedded in the pushed
+image as the `com.cloudtak.capabilities` OCI annotation. It declares one required permission, `feature:submit`, and a default
+`rate(1 minute)` schedule.
+
+The workflow builds with `docker buildx` (using the `docker-container` builder) rather than the `cloudtak-etl` CLI from
+`@tak-ps/etl`. The CLI hardcodes the ECR repository as `tak-vpc-<Environment>-cloudtak-tasks`, while TAK.NZ uses
+`<stackname>-etltasks`, looked up through the `EcrEtlTasksRepoArn` CloudFormation export.
+
+To check the annotation on a pushed image:
+```
+docker buildx imagetools inspect <ecr-uri>:<tag> --raw | jq .annotations
+```
+
 ### GitHub Actions Setup
 
 The workflow uses GitHub variables and secrets to make it reusable across different ETL repositories.
