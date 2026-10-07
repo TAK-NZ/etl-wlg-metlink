@@ -2,26 +2,30 @@
     "name": "etl-wlg-metlink",
     "type": "module",
     "prviate": true,
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "ETL for Wellington public transport vehicle positions from Metlink API",
     "main": "index.js",
     "scripts": {
-        "lint": "eslint *.ts",
+        "lint": "eslint *.ts test",
         "build": "tsc --build",
-        "test": "exit 0"
+        "test": "tsx --test test/*.test.ts"
     },
     "author": "Christian Elsen <chris@elsen.nz>",
     "license": "AGPL-3.0-only",
+    "engines": {
+        "node": ">= 24"
+    },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/geojson": "^7946.0.16",
         "eslint": "^10.6.0",
         "ts-node": "^10.9.2",
+        "tsx": "^4.23.15",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.62.1"
     },
     "dependencies": {
         "@sinclair/typebox": "^0.34.49",
-        "@tak-ps/etl": "^10.8.0"
+        "@tak-ps/etl": "^10.13.0"
     }
 }
