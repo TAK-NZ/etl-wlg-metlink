@@ -1,8 +1,8 @@
 {
     "name": "etl-wlg-metlink",
     "type": "module",
-    "prviate": true,
-    "version": "1.1.0",
+    "private": true,
+    "version": "1.2.0",
     "description": "ETL for Wellington public transport vehicle positions from Metlink API",
     "main": "index.js",
     "scripts": {
