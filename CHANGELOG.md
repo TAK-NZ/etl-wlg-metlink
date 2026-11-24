@@ -9,6 +9,9 @@
 - :tada: when adding new features
 
 ## Version History
+### v1.2.1
+- :arrow_up: Update `@tak-ps/etl` to `^11.4.0`. CloudTAK v14 requires ETLs to be on ETL-Base v11 or higher. v11 publishes Output schemas as named schemas, so this task needed no change for that, and the release also works with CloudTAK v13
+- :arrow_up: Update the other dependencies within their existing ranges, which clears the `npm audit --production` findings that the deploy workflow checks
 ### v1.2.0
 - :pencil2: Complete the manifest-based capabilities migration (TAK-NZ/CloudTAK#172). The `capabilities.json` manifest, the `docker buildx` OCI annotation in CI, the test suite and the `Task.init()` entry points were already delivered in v1.1.0, so this release re-verifies them rather than changing behaviour. `capabilities.json` was validated against `StaticCapabilitiesSchema` from the installed `@tak-ps/etl` 10.22.2, and its single required permission (`feature:submit`) matches the only CloudTAK API the task calls, `submit()`. `capabilities.json`, `task.ts` and the workflows are unchanged
 - :pencil2: The CI build is deliberately NOT moved to the `cloudtak-etl` CLI. Re-checked against `@tak-ps/etl` 10.22.2: `bin/build.ts` hardcodes the destination repository as `tak-vpc-<Environment>-cloudtak-tasks` and has no flag or environment variable to override it, whereas TAK.NZ base-infra creates `<stackname>-etltasks` and exports it as `EcrEtlTasksRepoArn`. Switching would push to a repository that does not exist. The image tag format is already the same as the CLI's, only the repository name differs. The manual `docker buildx` build and the CloudFormation export lookup therefore stay
